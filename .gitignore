@@ -1,0 +1,6 @@
+.env
+venv/
+accounts/migrations/*
+debattle/migrations/*
+__pycache__
+db.sqlite3

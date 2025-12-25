@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% load get_item %}
+{% block title %}Жюри | {{ event.title }}{% endblock %}
+
+{% block content %}
+<div class="box">
+  <h2>Кабинет жюри</h2>
+  <p><strong>{{ event.title }}</strong></p>
+  <p><strong>Жюри:</strong> {{ jury }}</p>
+
+  {% if messages %}
+    <div style="margin: 10px 0;">
+      {% for m in messages %}
+        <div style="padding:10px;border:1px solid #333;border-radius:8px;margin-bottom:8px;">
+          {{ m }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  {% if not match %}
+    <p>Сейчас нет активного матча. Жди команды ведущего.</p>
+  {% else %}
+    <p><strong>Текущий матч:</strong> {{ match.team_a.name }} vs {{ match.team_b.name }}</p>
+
+    <p><strong>Текущий раунд у ведущего:</strong> {{ event.current_round_number }} / 3</p>
+
+    <p>
+      <strong>Итог отправлен:</strong>
+      {% if submission.is_submitted %} Да ({{ submission.submitted_at }}) {% else %} Нет {% endif %}
+    </p>
+
+    <div class="box" style="margin-top:15px;">
+      <h3>Оценки по матчу (можно менять в любой момент)</h3>
+      <p>Шкала: 1–3. 5 критериев. Оценки применяются ко всему матчу.</p>
+
+      <table style="width:100%;border-collapse:collapse;">
+        <thead>
+          <tr>
+            <th style="text-align:left;border-bottom:1px solid #333;padding:8px;">Критерий</th>
+            <th style="text-align:left;border-bottom:1px solid #333;padding:8px;">{{ match.team_a.name }}</th>
+            <th style="text-align:left;border-bottom:1px solid #333;padding:8px;">{{ match.team_b.name }}</th>
+          </tr>
+        </thead>
+
+        <tbody>
+        {% for c in criteria %}
+          <tr>
+            <td style="border-bottom:1px solid #222;padding:8px;">{{ c.title }}</td>
+
+            <!-- Team A -->
+            <td style="border-bottom:1px solid #222;padding:8px;">
+              {% with key=match.team_a.id|stringformat:"s"|add:":"|add:c.id|stringformat:"s" %}
+                <div style="margin-bottom:6px;">
+                  Текущее: <strong>{{ score_map|get_item:key|default:"-" }}</strong>
+                </div>
+              {% endwith %}
+
+              {% for v in "123" %}
+                <form method="post" style="display:inline-block;margin-right:6px;">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="set_score">
+                  <input type="hidden" name="team_id" value="{{ match.team_a.id }}">
+                  <input type="hidden" name="criterion_id" value="{{ c.id }}">
+                  <input type="hidden" name="value" value="{{ v }}">
+                  <button type="submit" {% if submission.is_submitted %}disabled{% endif %}>{{ v }}</button>
+                </form>
+              {% endfor %}
+            </td>
+
+            <!-- Team B -->
+            <td style="border-bottom:1px solid #222;padding:8px;">
+              {% with key=match.team_b.id|stringformat:"s"|add:":"|add:c.id|stringformat:"s" %}
+                <div style="margin-bottom:6px;">
+                  Текущее: <strong>{{ score_map|get_item:key|default:"-" }}</strong>
+                </div>
+              {% endwith %}
+
+              {% for v in "123" %}
+                <form method="post" style="display:inline-block;margin-right:6px;">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="set_score">
+                  <input type="hidden" name="team_id" value="{{ match.team_b.id }}">
+                  <input type="hidden" name="criterion_id" value="{{ c.id }}">
+                  <input type="hidden" name="value" value="{{ v }}">
+                  <button type="submit" {% if submission.is_submitted %}disabled{% endif %}>{{ v }}</button>
+                </form>
+              {% endfor %}
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="box" style="margin-top:15px;">
+      <h3>Финальная отправка</h3>
+
+      {% if submission.is_submitted %}
+        <p>Итог уже отправлен, изменение оценок заблокировано.</p>
+      {% else %}
+        {% if not can_submit %}
+        <p style="color:#ff7777;">
+            Нельзя отправить итог до старта 3-го раунда.
+          </p>
+          <button disabled>Отправить итог по матчу</button>
+        {% else %}
+          <form method="post" onsubmit="return confirm('Точно отправить итог? После этого изменить оценки будет нельзя.');">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="submit_final">
+            <button type="submit">Отправить итог по матчу</button>
+          </form>
+        {% endif %}
+      {% endif %}
+    </div>
+
+  {% endif %}
+</div>
+{% endblock %}

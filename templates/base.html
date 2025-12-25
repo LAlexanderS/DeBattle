@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}DeBattle{% endblock %}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #0f0f0f;
+            color: #fff;
+            margin: 0;
+            padding: 40px;
+        }
+        a {
+            color: #4ea1ff;
+            text-decoration: none;
+        }
+        .box {
+            border: 1px solid #333;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>DeBattle Service</h1>
+
+{% block content %}{% endblock %}
+
+</body>
+</html>

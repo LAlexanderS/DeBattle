@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Регистрация | {{ event.title }}{% endblock %}
+
+{% block content %}
+<div class="box">
+  <h2>Регистрация команды</h2>
+  <p><strong>{{ event.title }}</strong></p>
+
+  {% if messages %}
+    <div style="margin: 10px 0;">
+      {% for m in messages %}
+        <div style="padding:10px;border:1px solid #333;border-radius:8px;margin-bottom:8px;">
+          {{ m }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <h3>Команда</h3>
+    {{ team_form.as_p }}
+
+    <h3>Участники (ровно 2)</h3>
+    {{ formset.management_form }}
+    {% for form in formset %}
+      <div style="border:1px solid #333;padding:12px;border-radius:8px;margin-bottom:12px;">
+        <h4>Участник {{ forloop.counter }}</h4>
+        {{ form.as_p }}
+      </div>
+    {% endfor %}
+
+    <button type="submit" style="padding:10px 16px;border-radius:8px;cursor:pointer;">
+      Зарегистрировать
+    </button>
+  </form>
+</div>
+{% endblock %}

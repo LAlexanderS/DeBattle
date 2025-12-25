@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Главная | DeBattle{% endblock %}
+
+{% block content %}
+<div class="box">
+    <h2>Сервис проведения DeBattle</h2>
+
+    <p>Проект успешно запущен.</p>
+
+    <ul>
+        <li><a href="/admin/">Админка</a></li>
+        <li>Экран: /debattle/&lt;slug&gt;/screen/</li>
+        <li>Пульт: /debattle/&lt;slug&gt;/control/</li>
+        <li>Жюри: /debattle/&lt;slug&gt;/jury/</li>
+        <li>Регистрация: /debattle/&lt;slug&gt;/register/</li>
+    </ul>
+
+    <p>
+        Если ты это видишь — Django, templates и маршрутизация работают.
+    </p>
+</div>
+{% endblock %}

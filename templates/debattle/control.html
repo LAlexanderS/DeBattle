@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}Пульт | {{ event.title }}{% endblock %}
+
+{% block content %}
+<div class="box">
+  <h2>Пульт управления</h2>
+  <p><strong>{{ event.title }}</strong></p>
+  <p><strong>State:</strong> {{ event.state }}</p>
+
+  {% if messages %}
+    <div style="margin: 10px 0;">
+      {% for m in messages %}
+        <div style="padding:10px;border:1px solid #333;border-radius:8px;margin-bottom:8px;">
+          {{ m }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <h3>Темы</h3>
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="reveal_themes">
+    <button type="submit">Раскрыть темы</button>
+  </form>
+
+  <h3 style="margin-top:20px;">Туры</h3>
+  <p>Выбери текущий тур (обычно CLOSED/RUNNING):</p>
+
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="set_tour">
+    <select name="tour_id">
+      {% for t in tours %}
+        <option value="{{ t.id }}" {% if event.current_tour_id == t.id %}selected{% endif %}>
+          Тур №{{ t.number }} — {{ t.status }} (команд: {{ t.teams.count }})
+        </option>
+      {% empty %}
+        <option value="" disabled>Туров пока нет</option>
+      {% endfor %}
+    </select>
+    <button type="submit" {% if tours|length == 0 %}disabled{% endif %}>Выбрать</button>
+  </form>
+
+  <h3 style="margin-top:20px;">Эфир</h3>
+
+  <form method="post" style="margin-top:10px;">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="start_roulette">
+    <button type="submit">🎰 Запустить рулетку (выбрать пару)</button>
+  </form>
+
+  <form method="post" style="margin-top:10px;">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="start_round">
+    <button type="submit">▶️ Запустить следующий раунд</button>
+  </form>
+
+  <form method="post" style="margin-top:10px;">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="open_voting">
+    <button type="submit">🗳 Открыть голосование</button>
+  </form>
+
+  <form method="post" style="margin-top:10px;">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="close_voting">
+    <button type="submit">🔒 Закрыть голосование и показать результаты</button>
+  </form>
+
+  <div style="margin-top:20px;border-top:1px solid #333;padding-top:15px;">
+    <h3>Текущие статусы</h3>
+
+    <p><strong>Текущий тур:</strong>
+      {% if event.current_tour %}
+        Тур №{{ event.current_tour.number }} — {{ event.current_tour.status }}
+      {% else %}
+        нет
+      {% endif %}
+    </p>
+
+    <p><strong>Текущий матч:</strong>
+      {% if event.current_match %}
+        {{ event.current_match.team_a.name }} vs {{ event.current_match.team_b.name }}
+      {% else %}
+        нет
+      {% endif %}
+    </p>
+
+    <p><strong>Текущий раунд:</strong> {{ event.current_round_number }}</p>
+    <p><strong>Голосование открыто:</strong> {{ event.voting_open }}</p>
+
+    <hr style="border:0;border-top:1px solid #333;margin:15px 0;">
+
+    <h3>Жюри</h3>
+    <p><strong>Итог отправило:</strong> {{ submitted }}/{{ jury_total }}</p>
+
+    <p><strong>Оценок в системе:</strong>
+      {{ scores_count }}
+      {% if expected_scores %}
+        /{{ expected_scores }}
+      {% endif %}
+    </p>
+  </div>
+</div>
+{% endblock %}
