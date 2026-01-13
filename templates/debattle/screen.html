@@ -30,24 +30,6 @@
   </div>
 
   <div class="box">
-    <h2>Экран трансляции</h2>
-  
-    <p><strong>Мероприятие:</strong> {{ event.title }}</p>
-    <p><strong>Состояние:</strong> {{ event.state }}</p>
-  
-    {% if event.themes_revealed %}
-      <h3>Темы</h3>
-      <ol>
-        {% for th in event.themes.all %}
-          <li>{{ th.title }}</li>
-        {% endfor %}
-      </ol>
-    {% else %}
-      <p>Темы пока скрыты.</p>
-    {% endif %}
-  </div>
-  
-  <div class="box">
     <h3>Сцена</h3>
   
     {% if match %}
@@ -77,13 +59,53 @@
     {% endif %}
   
     {% if event.state == "ROUND_ACTIVE" and round %}
-      <h4>Идёт раунд {{ round.number }}</h4>
-      <p>Сейчас выступают команды выше.</p>
+      <h4>Раунд {{ round.number }}</h4>
+      {% if match.theme %}
+        <p><strong>Тема матча:</strong> {{ match.theme.title }}</p>
+        {% if match.team_a_position and match.team_b_position %}
+          <div style="display:flex;gap:20px;margin-top:15px;">
+            <div style="flex:1;border:1px solid #333;padding:12px;border-radius:8px;">
+              <strong>{{ match.team_a.name }}</strong>
+              <p><strong>Позиция:</strong> 
+                {% if match.team_a_position == "FOR" %}За{% elif match.team_a_position == "AGAINST" %}Против{% else %}—{% endif %}
+              </p>
+            </div>
+            <div style="flex:1;border:1px solid #333;padding:12px;border-radius:8px;">
+              <strong>{{ match.team_b.name }}</strong>
+              <p><strong>Позиция:</strong> 
+                {% if match.team_b_position == "FOR" %}За{% elif match.team_b_position == "AGAINST" %}Против{% else %}—{% endif %}
+              </p>
+            </div>
+          </div>
+        {% endif %}
+      {% else %}
+        <p>Сейчас выступают команды выше.</p>
+      {% endif %}
     {% endif %}
   
     {% if event.state == "VOTING_OPEN" and round %}
       <h4>Голосование открыто (раунд {{ round.number }})</h4>
-      <p>Жюри ставит оценки.</p>
+      {% if match.theme %}
+        <p><strong>Тема матча:</strong> {{ match.theme.title }}</p>
+        {% if match.team_a_position and match.team_b_position %}
+          <div style="display:flex;gap:20px;margin-top:15px;">
+            <div style="flex:1;border:1px solid #333;padding:12px;border-radius:8px;">
+              <strong>{{ match.team_a.name }}</strong>
+              <p><strong>Позиция:</strong> 
+                {% if match.team_a_position == "FOR" %}За{% elif match.team_a_position == "AGAINST" %}Против{% else %}—{% endif %}
+              </p>
+            </div>
+            <div style="flex:1;border:1px solid #333;padding:12px;border-radius:8px;">
+              <strong>{{ match.team_b.name }}</strong>
+              <p><strong>Позиция:</strong> 
+                {% if match.team_b_position == "FOR" %}За{% elif match.team_b_position == "AGAINST" %}Против{% else %}—{% endif %}
+              </p>
+            </div>
+          </div>
+        {% endif %}
+      {% else %}
+        <p>Жюри ставит оценки.</p>
+      {% endif %}
     {% endif %}
   
     {% if event.state == "RESULTS" and match %}
@@ -120,6 +142,25 @@
                 </div>
             </div>
         {% endif %}
+    {% endif %}
+
+    {% if match %}
+      <div style="margin-top:20px;border-top:1px solid #333;padding-top:15px;">
+        <h4>Раунды матча</h4>
+        {% if match.theme %}
+          <p><strong>Тема матча:</strong> {{ match.theme.title }}</p>
+        {% endif %}
+        {% if match.team_a_position and match.team_b_position %}
+          <p><strong>Позиции:</strong> {{ match.team_a.name }} — {% if match.team_a_position == "FOR" %}За{% elif match.team_a_position == "AGAINST" %}Против{% endif %}, {{ match.team_b.name }} — {% if match.team_b_position == "FOR" %}За{% elif match.team_b_position == "AGAINST" %}Против{% endif %}</p>
+        {% endif %}
+        {% for r in match.rounds.all %}
+          <div style="border:1px solid #333;padding:12px;border-radius:8px;margin-bottom:10px;">
+            <strong>Раунд {{ r.number }}</strong> — {{ r.status }}
+          </div>
+        {% empty %}
+          <p>Раундов пока нет.</p>
+        {% endfor %}
+      </div>
     {% endif %}
 
   </div>

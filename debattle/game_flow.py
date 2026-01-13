@@ -50,8 +50,22 @@ def start_roulette(event: DebattleEvent) -> Match:
         # На всякий случай, чтобы не было сюрпризов
         teams = teams[:4]
 
-    # Выбираем 2 команды
-    team_a, team_b = random.sample(teams, 2)
+    # Проверяем, есть ли уже матчи в этом туре
+    existing_matches = Match.objects.filter(tour=tour)
+    used_teams = set()
+    for match in existing_matches:
+        used_teams.add(match.team_a_id)
+        used_teams.add(match.team_b_id)
+    
+    # Если уже есть матч, выбираем оставшиеся команды
+    if existing_matches.exists():
+        remaining_teams = [t for t in teams if t.id not in used_teams]
+        if len(remaining_teams) < 2:
+            raise ValueError("Недостаточно оставшихся команд для второго матча.")
+        team_a, team_b = remaining_teams[0], remaining_teams[1]
+    else:
+        # Первый раз - случайный выбор
+        team_a, team_b = random.sample(teams, 2)
 
     match = Match.objects.create(tour=tour, team_a=team_a, team_b=team_b, status=Match.Status.PENDING)
 
@@ -94,7 +108,37 @@ def start_next_round(event: DebattleEvent) -> Round:
     # если раунд существовал — активируем
     rnd.status = Round.Status.ACTIVE
     rnd.started_at = rnd.started_at or timezone.now()
-    rnd.save(update_fields=["status", "started_at"])
+    
+    # Автоматический выбор темы и позиций, если еще не выбраны
+    if not rnd.theme_id:
+        # Получаем все темы события
+        all_themes = list(event.themes.all())
+        
+        # Получаем уже использованные темы в этом матче
+        used_themes = set(
+            Round.objects.filter(match=match)
+            .exclude(id=rnd.id)
+            .exclude(theme__isnull=True)
+            .values_list("theme_id", flat=True)
+        )
+        
+        # Выбираем из оставшихся тем
+        available_themes = [t for t in all_themes if t.id not in used_themes]
+        
+        if not available_themes:
+            raise ValueError("Все темы уже использованы в этом матче.")
+        
+        # Случайный выбор темы
+        selected_theme = random.choice(available_themes)
+        rnd.theme = selected_theme
+        
+        # Случайный выбор позиций (за/против)
+        positions = [Round.Position.FOR, Round.Position.AGAINST]
+        random.shuffle(positions)
+        rnd.team_a_position = positions[0]
+        rnd.team_b_position = positions[1]
+    
+    rnd.save(update_fields=["status", "started_at", "theme", "team_a_position", "team_b_position"])
 
     event.current_round_number = next_number
     event.voting_open = False

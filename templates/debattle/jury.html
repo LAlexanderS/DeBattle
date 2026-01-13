@@ -25,7 +25,37 @@
 
     <p><strong>Текущий раунд у ведущего:</strong> {{ event.current_round_number }} / 3</p>
 
-    <p>
+    {% if match.theme %}
+      <div style="margin-top:15px;padding:12px;border:1px solid #333;border-radius:8px;background:#262222;">
+        <h4>Тема матча</h4>
+        <p><strong>{{ match.theme.title }}</strong></p>
+      </div>
+    {% endif %}
+
+    {% if match.team_a_position and match.team_b_position %}
+      <div style="margin-top:15px;padding:12px;border:1px solid #333;border-radius:8px;background:#262222;">
+        <h4>Позиции команд</h4>
+        <div style="display:flex;gap:20px;margin-top:10px;">
+          <div style="flex:1;">
+            <strong>{{ match.team_a.name }}:</strong> 
+            {% if match.team_a_position == "FOR" %}За{% elif match.team_a_position == "AGAINST" %}Против{% else %}—{% endif %}
+          </div>
+          <div style="flex:1;">
+            <strong>{{ match.team_b.name }}:</strong> 
+            {% if match.team_b_position == "FOR" %}За{% elif match.team_b_position == "AGAINST" %}Против{% else %}—{% endif %}
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
+    {% if current_round %}
+      <div style="margin-top:15px;padding:12px;border:1px solid #333;border-radius:8px;background:#262222;">
+        <h4>Текущий раунд {{ current_round.number }}</h4>
+        <p>Статус: {{ current_round.status }}</p>
+      </div>
+    {% endif %}
+
+    <p style="margin-top:15px;">
       <strong>Итог отправлен:</strong>
       {% if submission.is_submitted %} Да ({{ submission.submitted_at }}) {% else %} Нет {% endif %}
     </p>
@@ -51,41 +81,49 @@
             <!-- Team A -->
             <td style="border-bottom:1px solid #222;padding:8px;">
               {% with key=match.team_a.id|stringformat:"s"|add:":"|add:c.id|stringformat:"s" %}
-                <div style="margin-bottom:6px;">
-                  Текущее: <strong>{{ score_map|get_item:key|default:"-" }}</strong>
-                </div>
+                {% with current_score=score_map|get_item:key %}
+                  <div style="display:flex;gap:8px;align-items:center;">
+                    {% for v in "123" %}
+                      <form method="post" style="display:inline-block;margin:0;" onsubmit="event.preventDefault(); fetch(this.action, {method: 'POST', body: new FormData(this)}).then(() => window.location.reload()); return false;">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="set_score">
+                        <input type="hidden" name="team_id" value="{{ match.team_a.id }}">
+                        <input type="hidden" name="criterion_id" value="{{ c.id }}">
+                        <input type="hidden" name="value" value="{{ v }}">
+                        <button type="submit" 
+                                {% if submission.is_submitted %}disabled{% endif %}
+                                style="min-width:40px;padding:8px 12px;border:2px solid {% if current_score == v|add:0 %}#4CAF50{% else %}#666{% endif %};background:{% if current_score == v|add:0 %}#4CAF50{% else %}transparent{% endif %};color:{% if current_score == v|add:0 %}white{% else %}#ccc{% endif %};cursor:pointer;border-radius:4px;font-weight:{% if current_score == v|add:0 %}bold{% else %}normal{% endif %};">
+                          {{ v }}
+                        </button>
+                      </form>
+                    {% endfor %}
+                  </div>
+                {% endwith %}
               {% endwith %}
-
-              {% for v in "123" %}
-                <form method="post" style="display:inline-block;margin-right:6px;">
-                  {% csrf_token %}
-                  <input type="hidden" name="action" value="set_score">
-                  <input type="hidden" name="team_id" value="{{ match.team_a.id }}">
-                  <input type="hidden" name="criterion_id" value="{{ c.id }}">
-                  <input type="hidden" name="value" value="{{ v }}">
-                  <button type="submit" {% if submission.is_submitted %}disabled{% endif %}>{{ v }}</button>
-                </form>
-              {% endfor %}
             </td>
 
             <!-- Team B -->
             <td style="border-bottom:1px solid #222;padding:8px;">
               {% with key=match.team_b.id|stringformat:"s"|add:":"|add:c.id|stringformat:"s" %}
-                <div style="margin-bottom:6px;">
-                  Текущее: <strong>{{ score_map|get_item:key|default:"-" }}</strong>
-                </div>
+                {% with current_score=score_map|get_item:key %}
+                  <div style="display:flex;gap:8px;align-items:center;">
+                    {% for v in "123" %}
+                      <form method="post" style="display:inline-block;margin:0;" onsubmit="event.preventDefault(); fetch(this.action, {method: 'POST', body: new FormData(this)}).then(() => window.location.reload()); return false;">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="set_score">
+                        <input type="hidden" name="team_id" value="{{ match.team_b.id }}">
+                        <input type="hidden" name="criterion_id" value="{{ c.id }}">
+                        <input type="hidden" name="value" value="{{ v }}">
+                        <button type="submit" 
+                                {% if submission.is_submitted %}disabled{% endif %}
+                                style="min-width:40px;padding:8px 12px;border:2px solid {% if current_score == v|add:0 %}#4CAF50{% else %}#666{% endif %};background:{% if current_score == v|add:0 %}#4CAF50{% else %}transparent{% endif %};color:{% if current_score == v|add:0 %}white{% else %}#ccc{% endif %};cursor:pointer;border-radius:4px;font-weight:{% if current_score == v|add:0 %}bold{% else %}normal{% endif %};">
+                          {{ v }}
+                        </button>
+                      </form>
+                    {% endfor %}
+                  </div>
+                {% endwith %}
               {% endwith %}
-
-              {% for v in "123" %}
-                <form method="post" style="display:inline-block;margin-right:6px;">
-                  {% csrf_token %}
-                  <input type="hidden" name="action" value="set_score">
-                  <input type="hidden" name="team_id" value="{{ match.team_b.id }}">
-                  <input type="hidden" name="criterion_id" value="{{ c.id }}">
-                  <input type="hidden" name="value" value="{{ v }}">
-                  <button type="submit" {% if submission.is_submitted %}disabled{% endif %}>{{ v }}</button>
-                </form>
-              {% endfor %}
             </td>
           </tr>
         {% endfor %}

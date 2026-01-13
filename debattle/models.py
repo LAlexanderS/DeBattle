@@ -111,6 +111,9 @@ class Match(models.Model):
     team_b = models.ForeignKey(Team, on_delete=models.PROTECT, related_name="+")
     status = models.CharField(max_length=16, choices=Status.choices, default=Status.PENDING)
     winner = models.ForeignKey(Team, null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
+    
+    # Тема выбирается один раз для всего матча
+    theme = models.ForeignKey("Theme", null=True, blank=True, on_delete=models.SET_NULL, related_name="matches")
 
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -121,12 +124,21 @@ class Round(models.Model):
         ACTIVE = "ACTIVE"
         VOTING = "VOTING"
         LOCKED = "LOCKED"
+    
+    class Position(models.TextChoices):
+        FOR = "FOR"  # За
+        AGAINST = "AGAINST"  # Против
 
     match = models.ForeignKey(Match, on_delete=models.CASCADE, related_name="rounds")
     number = models.PositiveSmallIntegerField()
     status = models.CharField(max_length=16, choices=Status.choices, default=Status.READY)
     started_at = models.DateTimeField(null=True, blank=True)
     ended_at = models.DateTimeField(null=True, blank=True)
+    
+    # Новые поля для темы и позиций
+    theme = models.ForeignKey("Theme", null=True, blank=True, on_delete=models.SET_NULL, related_name="rounds")
+    team_a_position = models.CharField(max_length=16, choices=Position.choices, null=True, blank=True)
+    team_b_position = models.CharField(max_length=16, choices=Position.choices, null=True, blank=True)
 
     class Meta:
         unique_together = ("match", "number")

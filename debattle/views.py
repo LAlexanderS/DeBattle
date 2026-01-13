@@ -108,11 +108,31 @@ def control_view(request, slug: str):
         # ожидаем: кол-во судей * раунды * 2 команды * 5 критериев
         expected_scores = jury_total * 2 * 5
         scores_count = Score.objects.filter(match=event.current_match).count()
+    else:
+        match = None
+
+    # Получаем текущий раунд и все раунды матча
+    current_round = None
+    all_rounds = []
+    if match:
+        if event.current_round_number:
+            current_round = Round.objects.filter(match=match, number=event.current_round_number).first()
+        all_rounds = Round.objects.filter(match=match).order_by("number")
 
     return render(
         request,
         "debattle/control.html",
-        {"event": event, "tours": tours, "jury_total": jury_total, "submitted": submitted, "scores_count": scores_count, "expected_scores": expected_scores},
+        {
+            "event": event,
+            "tours": tours,
+            "jury_total": jury_total,
+            "submitted": submitted,
+            "scores_count": scores_count,
+            "expected_scores": expected_scores,
+            "match": match,
+            "current_round": current_round,
+            "all_rounds": all_rounds,
+        },
     )
 
 

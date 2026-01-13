@@ -3,9 +3,8 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
 
-from debattle.models import DebattleEvent
+from debattle.models import DebattleEvent, Round
 from .models import JuryMember, Score, JuryMatchSubmission
-
 
 @login_required
 @require_http_methods(["GET", "POST"])
@@ -73,6 +72,14 @@ def jury_view(request, slug: str):
     scores = Score.objects.filter(jury=jury, match=match).select_related("team", "criterion")
     score_map = {f"{s.team_id}:{s.criterion_id}": int(s.value) for s in scores}
 
+    # Получаем текущий раунд и все раунды матча
+    from debattle.models import Round
+    current_round = None
+    all_rounds = []
+    if event.current_round_number:
+        current_round = Round.objects.filter(match=match, number=event.current_round_number).first()
+    all_rounds = Round.objects.filter(match=match).order_by("number")
+
     return render(
         request,
         "debattle/jury.html",
@@ -84,5 +91,7 @@ def jury_view(request, slug: str):
             "score_map": score_map,
             "submission": submission,
             "can_submit": can_submit,
+            "current_round": current_round,
+            "all_rounds": all_rounds,
         },
     )
