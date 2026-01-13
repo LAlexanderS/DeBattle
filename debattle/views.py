@@ -17,6 +17,7 @@ from django.contrib import messages
 from .game_flow import reveal_themes, set_current_tour, start_roulette, start_next_round, open_voting, close_voting
 from accounts.models import JuryMember, JuryMatchSubmission
 
+from django.http import HttpResponse
 
 def screen_view(request, slug: str):
     event = get_object_or_404(DebattleEvent, slug=slug)

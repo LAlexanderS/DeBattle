@@ -10,6 +10,17 @@
     <p><strong>Состояние:</strong> {{ event.state }}</p>
 </div>
 
+{% if event.themes_revealed %}
+  <div class="box">
+    <h3>Темы</h3>
+    <ol>
+      {% for th in event.themes.all %}
+        <li>{{ th.title }}</li>
+      {% endfor %}
+    </ol>
+  </div>
+{% endif %}
+
 <div class="box">
     <h3>Туры</h3>
     {% for t in tours %}
@@ -151,7 +162,9 @@
           <p><strong>Тема матча:</strong> {{ match.theme.title }}</p>
         {% endif %}
         {% if match.team_a_position and match.team_b_position %}
-          <p><strong>Позиции:</strong> {{ match.team_a.name }} — {% if match.team_a_position == "FOR" %}За{% elif match.team_a_position == "AGAINST" %}Против{% endif %}, {{ match.team_b.name }} — {% if match.team_b_position == "FOR" %}За{% elif match.team_b_position == "AGAINST" %}Против{% endif %}</p>
+          <p><strong>Позиции команд (фиксированы для всех раундов):</strong></p>
+          <p>{{ match.team_a.name }} — {% if match.team_a_position == "FOR" %}За{% elif match.team_a_position == "AGAINST" %}Против{% endif %}</p>
+          <p>{{ match.team_b.name }} — {% if match.team_b_position == "FOR" %}За{% elif match.team_b_position == "AGAINST" %}Против{% endif %}</p>
         {% endif %}
         {% for r in match.rounds.all %}
           <div style="border:1px solid #333;padding:12px;border-radius:8px;margin-bottom:10px;">

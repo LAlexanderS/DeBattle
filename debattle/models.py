@@ -105,6 +105,10 @@ class Match(models.Model):
         PENDING = "PENDING"
         RUNNING = "RUNNING"
         DONE = "DONE"
+    
+    class Position(models.TextChoices):
+        FOR = "FOR"  # За
+        AGAINST = "AGAINST"  # Против
 
     tour = models.ForeignKey(Tour, on_delete=models.CASCADE, related_name="matches")
     team_a = models.ForeignKey(Team, on_delete=models.PROTECT, related_name="+")
@@ -114,6 +118,10 @@ class Match(models.Model):
     
     # Тема выбирается один раз для всего матча
     theme = models.ForeignKey("Theme", null=True, blank=True, on_delete=models.SET_NULL, related_name="matches")
+    
+    # Позиции определяются один раз для всего матча
+    team_a_position = models.CharField(max_length=16, choices=Position.choices, null=True, blank=True)
+    team_b_position = models.CharField(max_length=16, choices=Position.choices, null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
 

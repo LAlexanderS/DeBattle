@@ -109,15 +109,15 @@ def start_next_round(event: DebattleEvent) -> Round:
     rnd.status = Round.Status.ACTIVE
     rnd.started_at = rnd.started_at or timezone.now()
     
-    # Автоматический выбор темы и позиций, если еще не выбраны
-    if not rnd.theme_id:
+    # Если тема еще не выбрана для матча, выбираем её при первом раунде
+    if not match.theme_id:
         # Получаем все темы события
         all_themes = list(event.themes.all())
         
-        # Получаем уже использованные темы в этом матче
+        # Получаем уже использованные темы в других матчах этого тура
         used_themes = set(
-            Round.objects.filter(match=match)
-            .exclude(id=rnd.id)
+            Match.objects.filter(tour=match.tour)
+            .exclude(id=match.id)
             .exclude(theme__isnull=True)
             .values_list("theme_id", flat=True)
         )
@@ -126,19 +126,23 @@ def start_next_round(event: DebattleEvent) -> Round:
         available_themes = [t for t in all_themes if t.id not in used_themes]
         
         if not available_themes:
-            raise ValueError("Все темы уже использованы в этом матче.")
+            raise ValueError("Все темы уже использованы в этом туре.")
         
-        # Случайный выбор темы
+        # Случайный выбор темы для матча
         selected_theme = random.choice(available_themes)
-        rnd.theme = selected_theme
-        
-        # Случайный выбор позиций (за/против)
-        positions = [Round.Position.FOR, Round.Position.AGAINST]
-        random.shuffle(positions)
-        rnd.team_a_position = positions[0]
-        rnd.team_b_position = positions[1]
+        match.theme = selected_theme
+        match.save(update_fields=["theme"])
     
-    rnd.save(update_fields=["status", "started_at", "theme", "team_a_position", "team_b_position"])
+    # Позиции выбираются один раз при первом раунде и фиксируются для всего матча
+    if not match.team_a_position or not match.team_b_position:
+        # Случайный выбор позиций (за/против) для всего матча
+        positions = [Match.Position.FOR, Match.Position.AGAINST]
+        random.shuffle(positions)
+        match.team_a_position = positions[0]
+        match.team_b_position = positions[1]
+        match.save(update_fields=["team_a_position", "team_b_position"])
+    
+    rnd.save(update_fields=["status", "started_at"])
 
     event.current_round_number = next_number
     event.voting_open = False
